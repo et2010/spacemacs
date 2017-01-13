@@ -10,7 +10,9 @@
 ;;; License: GPLv3
 (setq evernote-packages
   '(
-    geeknote
+    (geeknote :location (recipe
+                         :fetcher github
+                         :repo "et2010/emacs-geeknote"))
     ))
 
 (defun evernote/init-geeknote ()
