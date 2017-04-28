@@ -295,9 +295,9 @@ is not set for the given SLOT."
     (eval `(oset pkg ,slot value))))
 
 (defvar configuration-layer--elpa-archives
-  '(("melpa" . "melpa.org/packages/")
-    ("org"   . "orgmode.org/elpa/")
-    ("gnu"   . "elpa.gnu.org/packages/"))
+  '(("melpa-cn" . "elpa.emacs-china.org/melpa/")
+    ("org-cn"   . "elpa.emacs-china.org/org/")
+    ("gnu-cn"   . "elpa.emacs-china.org/gnu/"))
   ;; '(("spacelpa" . "~/.emacs.d/.cache/spacelpa/"))
   "List of ELPA archives required by Spacemacs.")
 

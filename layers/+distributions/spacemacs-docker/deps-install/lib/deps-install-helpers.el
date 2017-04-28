@@ -394,7 +394,7 @@ EXAMPLE: (pandoc :variables pandoc-spacemacs-docker-disable-deps-install t)"
       ;; Make sure that the env user is configured.
       ($  "asEnvUser true"
           (l "chown $UNAME:$GNAME %s" spacemacs-docker-temp-deps-dir)
-          (v (l "su-exec %s emacs -batch -u %s" uname uname)
+          (v (l "/sbin/setuser %s emacs -batch -u %s" uname uname)
              "-f spacemacs-docker//dump-layers-data"))))
 
   (load spacemacs-docker-dump-layer-data-fp nil t)
