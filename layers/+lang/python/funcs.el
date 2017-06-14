@@ -232,8 +232,8 @@ to be called for each testrunner. "
 
 
 ;;* Anaconda
-(defun spacemacs/anaconda-view-forward-and-push ()
-  "Find next button and hit RET"
-  (interactive)
-  (forward-button 1)
-  (call-interactively #'push-button))
+;; (defun spacemacs/anaconda-view-forward-and-push ()
+;;   "Find next button and hit RET"
+;;   (interactive)
+;;   (forward-button 1)
+;;   (call-interactively #'push-button))

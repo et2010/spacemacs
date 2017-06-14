@@ -10,67 +10,34 @@
 ;;; License: GPLv3
 
 (setq python-packages
-  '(
-    anaconda-mode
-    company
-    (company-anaconda :requires company)
-    cython-mode
-    eldoc
-    evil-matchit
-    flycheck
-    ggtags
-    helm-cscope
-    helm-gtags
-    (helm-pydoc :requires helm)
-    hy-mode
-    live-py-mode
-    (nose :location local)
-    org
-    pip-requirements
-    pippel
-    py-isort
-    pyenv-mode
-    (pylookup :location local)
-    pytest
-    (python :location built-in)
-    pyvenv
-    semantic
-    smartparens
-    stickyfunc-enhance
-    xcscope
-    yapfify
-    ))
+      '(
+        company
+        cython-mode
+        elpy
+        evil-matchit
+        flycheck
+        ggtags
+        helm-cscope
+        helm-gtags
+        (helm-pydoc :requires helm)
+        hy-mode
+        live-py-mode
+        (nose :location local)
+        org
+        pip-requirements
+        pippel
+        py-isort
+        pyenv-mode
+        (pylookup :location local)
+        pytest
+        (python :location built-in)
+        pyvenv
+        semantic
+        smartparens
+        stickyfunc-enhance
+        xcscope
+        ))
 
-(defun python/init-anaconda-mode ()
-  (use-package anaconda-mode
-    :defer t
-    :init
-    (progn
-      (setq anaconda-mode-installation-directory
-            (concat spacemacs-cache-directory "anaconda-mode"))
-      (add-hook 'python-mode-hook 'anaconda-mode)
-      (add-to-list 'spacemacs-jump-handlers-python-mode
-                '(anaconda-mode-find-definitions :async t)))
-    :config
-    (progn
-      (spacemacs/set-leader-keys-for-major-mode 'python-mode
-        "hh" 'anaconda-mode-show-doc
-        "ga" 'anaconda-mode-find-assignments
-        "gb" 'anaconda-mode-go-back
-        "gu" 'anaconda-mode-find-references)
-
-      (evilified-state-evilify-map anaconda-mode-view-mode-map
-        :mode anaconda-mode-view-mode
-        :bindings
-        (kbd "q") 'quit-window
-        (kbd "C-j") 'next-error-no-select
-        (kbd "C-k") 'previous-error-no-select
-        (kbd "RET") 'spacemacs/anaconda-view-forward-and-push)
-
-      (spacemacs|hide-lighter anaconda-mode)
-
-      (defadvice anaconda-mode-goto (before python/anaconda-mode-goto activate)
-        (evil--jumps-push)))))
 
 (defun python/post-init-company ()
   (spacemacs|add-company-backends
@@ -84,28 +51,48 @@
       :backends company-capf
       :modes pip-requirements-mode)))
 
-(defun python/init-company-anaconda ()
-  (use-package company-anaconda
-    :defer t
-    :init (spacemacs|add-company-backends
-            :backends company-anaconda
-            :modes python-mode)))
-
 (defun python/init-cython-mode ()
   (use-package cython-mode
     :defer t
     :init
     (progn
       (spacemacs/set-leader-keys-for-major-mode 'cython-mode
-        "hh" 'anaconda-mode-view-doc
-        "gu" 'anaconda-mode-usages))))
+        "hh" 'elpy-doc
+        ;; "gu" 'anaconda-mode-usages
+        ))))
 
-(defun python/post-init-eldoc ()
-  (defun spacemacs//init-eldoc-python-mode ()
-    (eldoc-mode)
-    (when (configuration-layer/package-used-p 'anaconda-mode)
-      (anaconda-eldoc-mode)))
-  (add-hook 'python-mode-hook 'spacemacs//init-eldoc-python-mode))
+(defun python/init-elpy ()
+  (use-package elpy
+    :diminish elpy-mode
+    :init
+    (progn
+      (setq elpy-rpc-backend "jedi")
+
+      (add-to-list 'spacemacs-jump-handlers-python-mode
+                   '(elpy-goto-definition :async t)))
+    :config
+    (progn
+      (spacemacs/set-leader-keys-for-major-mode 'python-mode
+        "hh" 'elpy-doc
+        "gb" 'pop-tag-mark
+        "=" 'elpy-yapf-fix-code)
+      ;; Elpy removes the modeline lighters. Let's override this
+      (defun elpy-modules-remove-modeline-lighter (mode-name))
+
+
+      (when python-enable-yapf-format-on-save
+        (add-hook 'python-mode-hook
+                  (lambda ()
+                    (add-hook 'before-save-hook elpy-yapf-fix-code nil 'local))))
+
+      (elpy-enable)
+
+      ;; ;; This does not work well with scimax-org-babel-ipython
+      ;; (elpy-use-ipython)
+
+      (defadvice elpy-goto-definition (before python/elpy-goto-definition activate)
+        (evil--jumps-push))
+      )))
 
 (defun python/post-init-evil-matchit ()
   (add-hook `python-mode-hook `turn-on-evil-matchit-mode))
@@ -204,13 +191,13 @@
     :init
     (progn
       (pcase python-auto-set-local-pyenv-version
-       (`on-visit
-        (spacemacs/add-to-hooks 'spacemacs//pyenv-mode-set-local-version
-                                '(python-mode-hook
-                                  hy-mode-hook)))
-       (`on-project-switch
-        (add-hook 'projectile-after-switch-project-hook
-                  'spacemacs//pyenv-mode-set-local-version)))
+        (`on-visit
+         (spacemacs/add-to-hooks 'spacemacs//pyenv-mode-set-local-version
+                                 '(python-mode-hook
+                                   hy-mode-hook)))
+        (`on-project-switch
+         (add-hook 'projectile-after-switch-project-hook
+                   'spacemacs//pyenv-mode-set-local-version)))
       ;; setup shell correctly on environment switch
       (dolist (func '(pyenv-mode-set pyenv-mode-unset))
         (advice-add func :after 'spacemacs/python-setup-everything))
@@ -254,7 +241,7 @@
         (setq pylookup-dir (concat dir "pylookup/")
               pylookup-program (concat pylookup-dir "pylookup.py")
               pylookup-db-file (concat pylookup-dir "pylookup.db")))
-        (setq pylookup-completing-read 'completing-read))))
+      (setq pylookup-completing-read 'completing-read))))
 
 (defun python/init-pytest ()
   (use-package pytest
@@ -417,9 +404,9 @@
         (kbd "C-c M-l") 'spacemacs/comint-clear-buffer))))
 
 (defun python/post-init-semantic ()
-  (when (configuration-layer/package-used-p 'anaconda-mode)
-      (add-hook 'python-mode-hook
-                'spacemacs//disable-semantic-idle-summary-mode t))
+  (when (configuration-layer/package-used-p 'elpy)
+    (add-hook 'python-mode-hook
+              'spacemacs//disable-semantic-idle-summary-mode t))
   (spacemacs/add-to-hook 'python-mode-hook
                          '(semantic-mode
                            spacemacs//python-imenu-create-index-use-semantic-maybe))
@@ -452,14 +439,3 @@ fix this issue."
     :post-init
     (spacemacs/set-leader-keys-for-major-mode 'python-mode
       "gi" 'cscope/run-pycscope)))
-
-(defun python/init-yapfify ()
-  (use-package yapfify
-    :defer t
-    :init
-    (progn
-      (spacemacs/set-leader-keys-for-major-mode 'python-mode
-        "=" 'yapfify-buffer)
-      (when python-enable-yapf-format-on-save
-        (add-hook 'python-mode-hook 'yapf-mode)))
-    :config (spacemacs|hide-lighter yapf-mode)))
