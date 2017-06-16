@@ -26,7 +26,8 @@
     (executable-find command)))
 
 (defun spacemacs//python-setup-shell (&rest args)
-  (if (spacemacs/pyenv-executable-find "ipython")
+  (if (and (spacemacs/pyenv-executable-find "ipython")
+           (not (configuration-layer/layer-usedp 'scimax)))
       (progn (setq python-shell-interpreter "ipython")
              (if (version< (replace-regexp-in-string "\n$" "" (shell-command-to-string "ipython --version")) "5")
                  (setq python-shell-interpreter-args "-i")
