@@ -25,7 +25,8 @@
         (org-brain :toggle (version<= "25" emacs-version))
         (org-expiry :location built-in)
         (org-journal :toggle org-enable-org-journal-support)
-        (org-download :location (recipe :fetcher github :repo "et2010/org-download"))
+        (org-download :location (recipe :fetcher github :repo "et2010/org-download"
+                                        :branch "private"))
         org-mime
         org-pomodoro
         org-present
