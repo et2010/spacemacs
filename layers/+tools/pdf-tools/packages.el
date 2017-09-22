@@ -20,6 +20,28 @@
     (progn
       (pdf-tools-install)
 
+      (defun pdf-view-scroll-other-window (orig-func &rest args)
+        "Scroll other window. When other window contains a
+pdf-view buffer, scroll or goto next page."
+        (unless (with-selected-window (other-window-for-scrolling)
+                  (when (string= major-mode "pdf-view-mode")
+                    (pdf-view-next-line-or-next-page 10)
+                    t))
+          (apply orig-func args)))
+      (advice-add 'scroll-other-window :around #'pdf-view-scroll-other-window)
+
+      (defun pdf-view-scroll-other-window-down (orig-func &rest args)
+        "Scroll other window down. When other window contains a
+pdf-view buffer, scroll or goto previous page."
+        (let ((w (other-window-for-scrolling)))
+          (unless (with-selected-window w
+                    (when (string= major-mode "pdf-view-mode")
+                      (pdf-view-previous-line-or-previous-page 10)
+                      (pdf-view-redisplay w)
+                      t))
+            (apply orig-func args))))
+      (advice-add 'scroll-other-window-down :around #'pdf-view-scroll-other-window-down)
+
       (spacemacs|define-transient-state pdf-tools
         :title "PDF-tools transient state"
         :on-enter (setq which-key-inhibit t)
