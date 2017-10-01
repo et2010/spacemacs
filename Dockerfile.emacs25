@@ -48,6 +48,8 @@ RUN asEnvUser make -C ${UHOME}/.emacs.d/tests/core/ test \
     && cd ${UHOME}/.emacs.d \
     && printf "SPACEMACS REVISION: %s\n" "$(git rev-parse --verify HEAD)"
 
+RUN asEnvUser curl -L https://raw.githubusercontent.com/pyenv/pyenv-installer/master/bin/pyenv-installer | bash
+
 RUN ln -s \
     ${UHOME}/.emacs.d/layers/+distributions/spacemacs-docker/deps-install/run \
     /usr/local/sbin/install-deps \
