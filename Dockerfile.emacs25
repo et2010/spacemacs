@@ -48,7 +48,59 @@ RUN asEnvUser make -C ${UHOME}/.emacs.d/tests/core/ test \
     && cd ${UHOME}/.emacs.d \
     && printf "SPACEMACS REVISION: %s\n" "$(git rev-parse --verify HEAD)"
 
-RUN asEnvUser curl -L https://raw.githubusercontent.com/pyenv/pyenv-installer/master/bin/pyenv-installer | bash
+ENV PYEINS="https://raw.githubusercontent.com/pyenv/pyenv-installer/master/bin/pyenv-installer"
+RUN asEnvUser curl -o ${UHOME}/pyenv-installer ${PYEINS} \
+    && chmod 755 ${UHOME}/pyenv-installer \
+    && asEnvUser ${UHOME}/pyenv-installer \
+    && rm ${UHOME}/pyenv-installer \
+    # Setup pyenv initialization
+    && asEnvUser echo 'eval "$(pyenv init -)"' >> ${UHOME}/.bashrc \
+    && asEnvUser echo 'eval "$(pyenv virtualenv-init -)"' >> ${UHOME}/.bashrc
+
+ENV PYENV_ROOT=${UHOME}/.pyenv
+ENV PATH=${PYENV_ROOT}/bin:${PATH}
+
+RUN apt-get update \
+    && apt-get install \
+    build-essential \
+    libbz2-dev \
+    libdb5.3-dev \
+    libexpat1-dev \
+    libgdbm-dev \
+    liblzma-dev \
+    libncurses5-dev \
+    libncursesw5-dev \
+    libreadline-dev \
+    libsqlite3-dev \
+    libssl-dev \
+    tk-dev \
+    zlib1g-dev \
+    && asEnvUser pyenv install 3.6.2 \
+    && asEnvUser pyenv global 3.6.2 \
+    && apt-get autoremove \
+    && rm -rf /tmp/* /var/tmp/* /var/lib/apt/lists/* /root/.cache/*
+
+RUN apt-get purge \
+    build-essential \
+    libbz2-dev \
+    libdb5.3-dev \
+    libexpat1-dev \
+    libgdbm-dev \
+    liblzma-dev \
+    libncurses5-dev \
+    libncursesw5-dev \
+    libreadline-dev \
+    libsqlite3-dev \
+    libssl-dev \
+    tk-dev \
+    zlib1g-dev \
+    && apt-get autoremove \
+    && rm -rf /tmp/* /var/tmp/* /var/lib/apt/lists/* /root/.cache/*
+
+RUN asEnvUser pyenv virtualenv venv
+
+RUN asEnvUser pyenv activate venv \
+    && asEnvUser pip install apt-select
 
 RUN ln -s \
     ${UHOME}/.emacs.d/layers/+distributions/spacemacs-docker/deps-install/run \
@@ -57,7 +109,7 @@ RUN ln -s \
     && chmod 770 /usr/local/sbin/install-deps
 
 # Install global dependencies (if any exists)
-RUN install-deps
+# RUN install-deps
 
 # Entrypoint and deps installation script will recreate it.
 RUN userdel $UNAME \
