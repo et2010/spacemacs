@@ -102,10 +102,9 @@ RUN source ${UHOME}/.bashrc \
     && rm -rf ${UHOME}/.cache/pip/*
 
 # Find out the fastest apt mirror
-ENV COUNTRY="CN"
 RUN source ${UHOME}/.bashrc \
     && cd ${UHOME} \
-    && apt-select --country ${COUNTRY} \
+    && apt-select \
     && sudo mv -f sources.list /etc/apt/
 
 SHELL ["/bin/sh", "-c"]
