@@ -48,60 +48,67 @@ RUN asEnvUser make -C ${UHOME}/.emacs.d/tests/core/ test \
     && cd ${UHOME}/.emacs.d \
     && printf "SPACEMACS REVISION: %s\n" "$(git rev-parse --verify HEAD)"
 
-ENV PYEINS="https://raw.githubusercontent.com/pyenv/pyenv-installer/master/bin/pyenv-installer"
-RUN asEnvUser curl -o ${UHOME}/pyenv-installer ${PYEINS} \
-    && chmod 755 ${UHOME}/pyenv-installer \
-    && asEnvUser ${UHOME}/pyenv-installer \
-    && rm ${UHOME}/pyenv-installer \
-    # Setup pyenv initialization
-    && asEnvUser echo 'eval "$(pyenv init -)"' >> ${UHOME}/.bashrc \
-    && asEnvUser echo 'eval "$(pyenv virtualenv-init -)"' >> ${UHOME}/.bashrc
+# Install pyenv
+ENV PYVERS='3.6.2'
+RUN apt-get update && \
+    # This is basically the list from
+    # https://github.com/yyuu/pyenv/wiki/Common-build-problems
+    apt-get install build-essential libssl-dev zlib1g-dev libbz2-dev \
+        libreadline-dev libsqlite3-dev llvm libncurses5-dev \
+        libncursesw5-dev xz-utils && \
 
-ENV PYENV_ROOT=${UHOME}/.pyenv
-ENV PATH=${PYENV_ROOT}/bin:${PATH}
+    # Install pyenv and pyenv-virtualenv
+    git clone https://github.com/yyuu/pyenv.git ${UHOME}/.pyenv && \
+    git clone https://github.com/yyuu/pyenv-virtualenv.git \
+        ${UHOME}/.pyenv/plugins/pyenv-virtualenv && \
 
-RUN apt-get update \
-    && apt-get install \
-    build-essential \
-    libbz2-dev \
-    libdb5.3-dev \
-    libexpat1-dev \
-    libgdbm-dev \
-    liblzma-dev \
-    libncurses5-dev \
-    libncursesw5-dev \
-    libreadline-dev \
-    libsqlite3-dev \
-    libssl-dev \
-    tk-dev \
-    zlib1g-dev \
-    && asEnvUser pyenv install 3.6.2 \
-    && asEnvUser pyenv global 3.6.2 \
-    && apt-get autoremove \
-    && rm -rf /tmp/* /var/tmp/* /var/lib/apt/lists/* /root/.cache/*
+    # Build python with pyenv
+    ${UHOME}/.pyenv/plugins/python-build/bin/python-build \
+        -v ${PYVERS} ${UHOME}/.pyenv/versions/${PYVERS} && \
 
-RUN apt-get purge \
-    build-essential \
-    libbz2-dev \
-    libdb5.3-dev \
-    libexpat1-dev \
-    libgdbm-dev \
-    liblzma-dev \
-    libncurses5-dev \
-    libncursesw5-dev \
-    libreadline-dev \
-    libsqlite3-dev \
-    libssl-dev \
-    tk-dev \
-    zlib1g-dev \
-    && apt-get autoremove \
-    && rm -rf /tmp/* /var/tmp/* /var/lib/apt/lists/* /root/.cache/*
+    # Create a file of the pyenv init commands
+    echo 'export PYENV_ROOT="$UHOME/.pyenv"' >> pyenvinit && \
+    echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> pyenvinit && \
+    echo 'eval "$(pyenv init -)"' >> pyenvinit && \
+    echo 'eval "$(pyenv virtualenv-init -)"' >> pyenvinit && \
 
-RUN asEnvUser pyenv virtualenv venv
+    # Configure bash and zsh (in case it is installed later) for pyenv
+    cat pyenvinit >> ${UHOME}/.bashrc && \
+    cat pyenvinit >> ${UHOME}/.zshenv && \
+    rm pyenvinit && \
 
-RUN asEnvUser pyenv activate venv \
-    && asEnvUser pip install apt-select
+    # Set the user's global version to the python we just built
+    echo "$PYVERS" > ${UHOME}/.pyenv/version && \
 
+    # Correct the owner and group of all the files root created for the user
+    chown -R ${UNAME} ${UHOME} && \
+    chgrp -R ${GNAME} ${UHOME} && \
+    chmod ug+rw -R ${UHOME} && \
+
+    # Remove build tools to save a bunch of space
+    apt-get autoremove build-essential llvm && \
+    rm -rf /tmp/* /var/tmp/* /var/lib/apt/lists/* /root/.cache/*
+
+# Setup virtualenv
+SHELL ["asEnvUser", "/bin/bash", "-c"]
+ENV VENV_NAME="venv"
+RUN source ${UHOME}/.bashrc \
+    && pyenv virtualenv ${VENV_NAME} \
+    && echo 'source ${UHOME}/.pyenv/versions/${VENV_NAME}/bin/activate' >> ${UHOME}/.bashrc
+
+# Install apt-select
+RUN source ${UHOME}/.bashrc \
+    && pip install apt-select \
+    && rm -rf ${UHOME}/.cache/pip/*
+
+# Find out the fastest apt mirror
+ENV COUNTRY="CN"
+RUN source ${UHOME}/.bashrc \
+    && cd ${UHOME} \
+    && apt-select --country ${COUNTRY} \
+    && sudo mv -f sources.list /etc/apt/
+
+SHELL ["/bin/sh", "-c"]
 RUN ln -s \
     ${UHOME}/.emacs.d/layers/+distributions/spacemacs-docker/deps-install/run \
     /usr/local/sbin/install-deps \
@@ -109,7 +116,7 @@ RUN ln -s \
     && chmod 770 /usr/local/sbin/install-deps
 
 # Install global dependencies (if any exists)
-# RUN install-deps
+RUN install-deps
 
 # Entrypoint and deps installation script will recreate it.
 RUN userdel $UNAME \
