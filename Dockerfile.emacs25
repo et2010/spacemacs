@@ -11,7 +11,7 @@
 ##
 ## See spacemacs/layers/+distributions/spacemacs-docker/README.org
 
-FROM et2010/emacs:latest
+FROM et2010/docker-emacs:latest
 # FROM jare/emacs:emacs24
 # Emacs snapshot
 # FROM jare/emacs:testing
