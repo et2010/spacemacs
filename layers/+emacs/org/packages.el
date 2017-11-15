@@ -541,9 +541,12 @@ Headline^^            Visit entry^^               Filter^^                    Da
     (progn
       (add-hook 'org-mode-hook 'org-download-enable)
       (spacemacs/declare-prefix-for-mode 'org-mode "miD" "download")
+      (spacemacs/declare-prefix-for-mode 'org-mode "mr" "rename")
       (spacemacs/set-leader-keys-for-major-mode 'org-mode
         "iDy" 'org-download-yank
-        "iDs" 'org-download-screenshot))))
+        "iDs" 'org-download-screenshot
+        "rr"  'org-download-rename-at-point
+        "rl"  'org-download-rename-last-file))))
 
 (defun org/init-org-mime ()
   (use-package org-mime
