@@ -382,7 +382,8 @@
   "qs" 'spacemacs/save-buffers-kill-emacs
   "qq" 'spacemacs/prompt-kill-emacs
   "qQ" 'spacemacs/kill-emacs
-  "qf" 'spacemacs/frame-killer)
+  "qf" 'spacemacs/frame-killer
+  "qc" 'spacemacs/kill-client)
 ;; window ---------------------------------------------------------------------
 (defun split-window-below-and-focus ()
   "Split the window vertically and focus the new window."

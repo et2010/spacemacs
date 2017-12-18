@@ -689,6 +689,11 @@ dotspacemacs-persistent-server to be t"
     (error
      (make-frame-invisible nil 1))))
 
+(defun spacemacs/kill-client ()
+  "Kill current client buffer"
+  (interactive)
+  (server-edit))
+
 (defun spacemacs/toggle-frame-fullscreen ()
   "Respect the `dotspacemacs-fullscreen-use-non-native' variable when
 toggling fullscreen."
