@@ -39,7 +39,7 @@
 (defun spacemacs//python-setup-anaconda-company ()
   "Setup anaconda auto-completion."
   (spacemacs|add-company-backends
-    :backends (company-anaconda company-dabbrev-code company-yasnippet)
+    :backends (company-anaconda company-dabbrev-code company-files company-yasnippet)
     :modes python-mode
     :append-hooks nil
     :call-hooks t
@@ -127,10 +127,10 @@ as the pyenv version then also return nil. This works around https://github.com/
     (executable-find command)))
 
 (defun spacemacs//python-setup-shell (&rest args)
-  (if (spacemacs/pyenv-executable-find "ipython")
+  (if t ;(spacemacs/pyenv-executable-find "ipython")
       (progn (setq python-shell-interpreter "ipython")
              (if (version< (replace-regexp-in-string "[\r\n|\n]$" "" (shell-command-to-string "ipython --version")) "5")
-                 (setq python-shell-interpreter-args "-i")
+                 (setq python-shell-interpreter-args "-i --pylab=qt --gui=qt")
                (setq python-shell-interpreter-args "--simple-prompt -i")))
     (progn
       (setq python-shell-interpreter-args "-i")
