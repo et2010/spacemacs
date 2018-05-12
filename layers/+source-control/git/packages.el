@@ -23,6 +23,7 @@
         (helm-gitignore :requires helm)
         magit
         magit-gitflow
+        magit-org-todos
         ;; not compatible with magit 2.1 at the time of release
         ;; magit-svn
         (orgit :requires org)
@@ -200,6 +201,13 @@ Press [_b_] again to blame further in the history, [_q_] to go up or quit."
             (with-eval-after-load 'magit
               (define-key magit-mode-map "%" 'magit-gitflow-popup)))
     :config (spacemacs|diminish magit-gitflow-mode "Flow")))
+
+(defun git/init-magit-org-todos ()
+  (use-package magit-org-todos
+    :defer t
+    :init
+    (with-eval-after-load "magit"
+      (magit-org-todos-autoinsert))))
 
 (defun git/init-magit-svn ()
   (use-package magit-svn
