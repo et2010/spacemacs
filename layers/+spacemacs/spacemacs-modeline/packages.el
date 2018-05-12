@@ -21,9 +21,9 @@
                     :location (recipe :fetcher github
                                       :repo emacsmirror/font-lock-plus))
         neotree
-        spaceline
-        ;; (spaceline :location (recipe :fetcher github :repo "et2010/spaceline"
-        ;;                              :branch "add-fcitx-segment"))
+        ;; spaceline
+        (spaceline :location (recipe :fetcher github :repo "et2010/spaceline"
+                                     :branch "add-fcitx-segment"))
         spaceline-all-the-icons
         symon
         (vim-powerline :location local)
